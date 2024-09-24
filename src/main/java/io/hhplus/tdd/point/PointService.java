@@ -2,8 +2,12 @@ package io.hhplus.tdd.point;
 
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
+import io.hhplus.tdd.point.exception.NoPointHistoryException;
 import io.hhplus.tdd.point.exception.UserNotFoundException;
 import org.springframework.stereotype.Service;
+
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 public class PointService {
@@ -55,6 +59,24 @@ public class PointService {
         }
 
         return userPoint;
+    }
+
+    public List<PointHistory> getPointHistory(Long userId) {
+        pointValidator.validateUserId(userId);
+        UserPoint userPoint = userPointTable.selectById(userId);
+        if (userPoint.isEmpty()) {
+            throw UserNotFoundException.notFoundUser(userId);
+        }
+
+        List<PointHistory> historyList = pointHistoryTable.selectAllByUserId(userId);
+
+        if (historyList.isEmpty()) {
+            throw NoPointHistoryException.notFoundHistory(userId);
+        }
+
+        return historyList.stream()
+                .sorted(Comparator.comparingLong(PointHistory::updateMillis).reversed())
+                .toList();
     }
 
 }

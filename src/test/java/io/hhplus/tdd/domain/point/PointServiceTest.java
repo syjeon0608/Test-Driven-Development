@@ -3,6 +3,7 @@ package io.hhplus.tdd.domain.point;
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.*;
+import io.hhplus.tdd.point.exception.NoPointHistoryException;
 import io.hhplus.tdd.point.exception.UserNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,8 +12,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -123,6 +126,36 @@ class PointServiceTest {
         assertEquals(userPoint.id(), result.id());
         assertEquals(userPoint.point(), result.point());
 
+    }
+
+    @Test
+    public void shouldGetPointHistorySuccessfully() {
+        Long userId = 1L;
+        UserPoint userPoint = new UserPoint(userId, 30L, System.currentTimeMillis());
+        when(userPointTable.selectById(userId)).thenReturn(userPoint);
+
+        List<PointHistory> pointHistoryList = List.of(
+                new PointHistory(1L, userId, 50L, TransactionType.CHARGE, System.currentTimeMillis() - 1000),
+                new PointHistory(2L, userId, -20L, TransactionType.USE, System.currentTimeMillis())
+        );
+
+        when(pointHistoryTable.selectAllByUserId(userId)).thenReturn(pointHistoryList);
+
+        List<PointHistory> result = pointService.getPointHistory(userId);
+        System.out.println(result);
+
+        assertEquals(2, result.size());
+        assertTrue(result.get(0).updateMillis() > result.get(1).updateMillis());
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenNoPointHistoryExists() {
+        Long userId = 1L;
+        UserPoint userPoint = new UserPoint(userId, 30L, System.currentTimeMillis());
+        when(userPointTable.selectById(userId)).thenReturn(userPoint);
+        when(pointHistoryTable.selectAllByUserId(userId)).thenReturn(Collections.emptyList());
+
+        assertThrows(NoPointHistoryException.class, () -> pointService.getPointHistory(userId));
     }
 
 }
