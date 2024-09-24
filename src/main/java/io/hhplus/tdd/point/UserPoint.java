@@ -33,7 +33,7 @@ public record UserPoint(
         if (amount <= 0) {
             throw InvalidUseAmountException.amountIsTooLow();
         }
-        return new UserPoint(this.id, this.point - amount, System.currentTimeMillis(), this.isEmpty);
+        return new UserPoint(this.id, this.point - amount, System.currentTimeMillis(), false);
     }
 
 }
