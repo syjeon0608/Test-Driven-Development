@@ -46,4 +46,15 @@ public class PointService {
         return updatedUserPoint;
     }
 
+    public UserPoint getUserPoints(Long userId) {
+        pointValidator.validateUserId(userId);
+        UserPoint userPoint = userPointTable.selectById(userId);
+
+        if (userPoint.isEmpty()) {
+            throw UserNotFoundException.notFoundUser(userId);
+        }
+
+        return userPoint;
+    }
+
 }

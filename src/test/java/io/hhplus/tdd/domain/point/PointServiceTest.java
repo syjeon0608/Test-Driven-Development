@@ -53,18 +53,33 @@ class PointServiceTest {
         verify(pointHistoryTable).insert(eq(userId), eq(amount), eq(TransactionType.CHARGE), anyLong());
     }
 
-
     @Test
-    public void shouldCallValidatorBeforeCharging() {
+    public void shouldCallValidatorForCharge() {
         //validator에 대한 검증은 Validator 에서 했기 때문에 서비스단에서는 Validator와의 상호작용 확인 정도만 하였습니다.
         when(userPointTable.selectById(1L)).thenReturn(new UserPoint(1L, 100L, System.currentTimeMillis()));
+
         pointService.chargePoints(1L, 50L);
-        pointService.usePoints(1L, 50L);
 
         verify(pointValidator).validateCharge(1L, 50L);
+    }
+
+    @Test
+    public void shouldCallValidatorForUse() {
+        when(userPointTable.selectById(1L)).thenReturn(new UserPoint(1L, 100L, System.currentTimeMillis()));
+
+        pointService.usePoints(1L, 50L);
+
         verify(pointValidator).validateUse(1L, 50L);
     }
 
+    @Test
+    public void shouldCallValidatorForGetUser() {
+        when(userPointTable.selectById(1L)).thenReturn(new UserPoint(1L, 100L, System.currentTimeMillis()));
+
+        pointService.getUserPoints(1L);
+
+        verify(pointValidator).validateUserId(1L);
+    }
     @Test
     public void shouldThrowExceptionWhenUserNotFound() {
         //해당 ID 의 유저가 존재하지 않는경우 예외를 던지는 것은 비지니스 규칙이라 서비스에 작성하였습니다.
@@ -97,5 +112,17 @@ class PointServiceTest {
         verify(pointHistoryTable).insert(eq(userId), eq(-amount), eq(TransactionType.USE), anyLong());
     }
 
+    @Test
+    public void shouldGetUserPointsSuccessfully() {
+        Long userId = 1L;
+        UserPoint userPoint = new UserPoint(userId, 100L, System.currentTimeMillis());
+        when(userPointTable.selectById(userId)).thenReturn(userPoint);
+
+        UserPoint result = pointService.getUserPoints(userId);
+
+        assertEquals(userPoint.id(), result.id());
+        assertEquals(userPoint.point(), result.point());
+
+    }
 
 }
