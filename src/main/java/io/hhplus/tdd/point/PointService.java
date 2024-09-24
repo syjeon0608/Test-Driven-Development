@@ -1,9 +1,9 @@
 package io.hhplus.tdd.point;
 
-import io.hhplus.tdd.database.PointHistoryTable;
-import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.exception.NoPointHistoryException;
 import io.hhplus.tdd.point.exception.UserNotFoundException;
+import io.hhplus.tdd.point.repository.PointHistoryRepository;
+import io.hhplus.tdd.point.repository.UserPointRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -12,36 +12,34 @@ import java.util.List;
 @Service
 public class PointService {
 
-    private final UserPointTable userPointTable;
-    private final PointHistoryTable pointHistoryTable;
+    private final UserPointRepository userPointRepository;
+    private final PointHistoryRepository pointHistoryRepository;
     private final PointValidator pointValidator;
 
-    public PointService(UserPointTable userPointTable, PointHistoryTable pointHistoryTable, PointValidator pointValidator) {
-        this.userPointTable = userPointTable;
-        this.pointHistoryTable = pointHistoryTable;
+    public PointService(UserPointRepository userPointRepository, PointHistoryRepository pointHistoryRepository, PointValidator pointValidator) {
+        this.userPointRepository = userPointRepository;
+        this.pointHistoryRepository = pointHistoryRepository;
         this.pointValidator = pointValidator;
     }
-    // 공통 사용자 조회 및 검증 메서드
-    private UserPoint getUserPointOrThrow(Long userId) {
-        UserPoint userPoint = userPointTable.selectById(userId);
-        if (userPoint.isEmpty()) {
-            throw UserNotFoundException.notFoundUser(userId);
-        }
-        return userPoint;
+
+
+    // 등록/미등록 유저 판별 메서드
+    public UserPoint getUserPointOrThrow(Long userId) {
+        return userPointRepository.selectById(userId)
+                .orElseThrow(() -> UserNotFoundException.notFoundUser(userId));
     }
 
     // 포인트 기록 저장 로직 통합 메서드
     private void savePointHistory(Long userId, Long amount, TransactionType type) {
-        pointHistoryTable.insert(userId, amount, type, System.currentTimeMillis());
+        pointHistoryRepository.insert(userId, amount, type, System.currentTimeMillis());
     }
-
-
+    
     public UserPoint chargePoints(Long userId, Long amount) {
         pointValidator.validateCharge(userId, amount);
         UserPoint userPoint = getUserPointOrThrow(userId);
 
         UserPoint updatedUserPoint = userPoint.charge(amount);
-        userPointTable.insertOrUpdate(userId, updatedUserPoint.point());
+        userPointRepository.insertOrUpdate(userId, updatedUserPoint.point());
         savePointHistory(userId, amount, TransactionType.CHARGE);
 
         return updatedUserPoint;
@@ -52,7 +50,7 @@ public class PointService {
         UserPoint userPoint = getUserPointOrThrow(userId);
 
         UserPoint updatedUserPoint = userPoint.use(amount);
-        userPointTable.insertOrUpdate(userId, updatedUserPoint.point());
+        userPointRepository.insertOrUpdate(userId, updatedUserPoint.point());
         savePointHistory(userId, -amount, TransactionType.USE);
 
         return updatedUserPoint;
@@ -67,7 +65,7 @@ public class PointService {
         pointValidator.validateUserId(userId);
         getUserPointOrThrow(userId);
 
-        List<PointHistory> historyList = pointHistoryTable.selectAllByUserId(userId);
+        List<PointHistory> historyList = pointHistoryRepository.selectAllByUserId(userId);
 
         if (historyList.isEmpty()) {
             throw NoPointHistoryException.notFoundHistory(userId);

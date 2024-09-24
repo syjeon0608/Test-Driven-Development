@@ -5,15 +5,20 @@ import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.*;
 import io.hhplus.tdd.point.exception.NoPointHistoryException;
 import io.hhplus.tdd.point.exception.UserNotFoundException;
+import io.hhplus.tdd.point.repository.PointHistoryRepository;
+import io.hhplus.tdd.point.repository.UserPointRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import static java.lang.System.currentTimeMillis;
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,13 +27,14 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class PointServiceTest {
 
     @Mock
-    private UserPointTable userPointTable;
+    private UserPointRepository userPointRepository;
 
     @Mock
-    private PointHistoryTable pointHistoryTable;
+    private PointHistoryRepository pointHistoryRepository;
 
     @Mock
     private PointValidator pointValidator;
@@ -83,9 +89,11 @@ class PointServiceTest {
     }
 
     @Test
-    @DisplayName("유효하지 않은 사용자 ID에 대해 예외를 던져야 한다")
+    @DisplayName("미등록 ID에 대해 예외를 던져야 한다")
     public void shouldThrowExceptionWhenUserNotFound() {
-        assertThrows(UserNotFoundException.class, () -> userPointTable.selectById(999L));
+        when(userPointRepository.selectById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> pointService.getUserPointOrThrow(999L));
     }
 
     @Test
