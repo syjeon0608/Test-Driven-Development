@@ -26,4 +26,20 @@ class PointValidatorTest {
         assertThrows(IllegalArgumentException.class, () -> validator.validateCharge(1L, null));
     }
 
+    @Test
+    public void shouldValidateUseSuccessfully() {
+        assertDoesNotThrow(() -> validator.validateUse(1L, 50L));
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenUserIdIsInvalid() {
+        assertThrows(IllegalArgumentException.class, () -> validator.validateUse(-1L, 50L));
+        assertThrows(IllegalArgumentException.class, () -> validator.validateUse(0L, 50L));
+        assertThrows(IllegalArgumentException.class, () -> validator.validateUse(null, 50L));
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenAmountIsNull() {
+        assertThrows(IllegalArgumentException.class, () -> validator.validateUse(1L, null));
+    }
 }

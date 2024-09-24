@@ -32,4 +32,18 @@ public class PointService {
         return updatedUserPoint;
     }
 
+    public UserPoint usePoints(Long userId, Long amount) {
+        pointValidator.validateUse(userId, amount);
+        UserPoint userPoint = userPointTable.selectById(userId);
+        if (userPoint.isEmpty()) {
+            throw UserNotFoundException.notFoundUser(userId);
+        }
+
+        UserPoint updatedUserPoint = userPoint.use(amount);
+        userPointTable.insertOrUpdate(userId, updatedUserPoint.point());
+        pointHistoryTable.insert(userId, -amount, TransactionType.USE, System.currentTimeMillis());
+
+        return updatedUserPoint;
+    }
+
 }

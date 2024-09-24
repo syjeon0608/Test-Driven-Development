@@ -15,4 +15,14 @@ public class PointValidator {
         }
     }
 
+    //포인트 사용 요청 검증
+    public void validateUse(Long userId, Long amount) {
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("유효하지 않은 사용자 ID 입니다.");
+        }
+        if (amount == null ) {
+            throw new IllegalArgumentException("사용 금액의 입력이 필요합니다.");
+        }
+    }
+
 }

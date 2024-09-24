@@ -15,8 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PointServiceTest {
@@ -60,8 +59,10 @@ class PointServiceTest {
         //validator에 대한 검증은 Validator 에서 했기 때문에 서비스단에서는 Validator와의 상호작용 확인 정도만 하였습니다.
         when(userPointTable.selectById(1L)).thenReturn(new UserPoint(1L, 100L, System.currentTimeMillis()));
         pointService.chargePoints(1L, 50L);
+        pointService.usePoints(1L, 50L);
 
         verify(pointValidator).validateCharge(1L, 50L);
+        verify(pointValidator).validateUse(1L, 50L);
     }
 
     @Test
@@ -76,5 +77,25 @@ class PointServiceTest {
 
         verify(userPointTable).selectById(userId);
     }
+
+    @Test
+    public void shouldUsePointsSuccessfully() {
+        Long userId = 1L;
+        Long amount = 20L;
+        UserPoint userPoint = new UserPoint(userId, 100L, System.currentTimeMillis());
+
+        when(userPointTable.selectById(userId)).thenReturn(userPoint);
+        when(userPointTable.insertOrUpdate(userId, 80L)).thenReturn(new UserPoint(userId, 80L, System.currentTimeMillis()));
+
+        UserPoint updatedUserPoint = pointService.usePoints(userId, amount);
+
+        assertEquals(80L, updatedUserPoint.point());
+
+        // 메서드 호출 검증
+        verify(userPointTable).selectById(userId);
+        verify(userPointTable).insertOrUpdate(userId, 80L);
+        verify(pointHistoryTable).insert(eq(userId), eq(-amount), eq(TransactionType.USE), anyLong());
+    }
+
 
 }
