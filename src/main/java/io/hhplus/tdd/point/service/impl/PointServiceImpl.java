@@ -1,9 +1,9 @@
 package io.hhplus.tdd.point.service.impl;
 
-import io.hhplus.tdd.point.PointHistory;
-import io.hhplus.tdd.point.PointValidator;
-import io.hhplus.tdd.point.TransactionType;
-import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.entity.PointHistory;
+import io.hhplus.tdd.point.entity.PointValidator;
+import io.hhplus.tdd.point.entity.TransactionType;
+import io.hhplus.tdd.point.entity.UserPoint;
 import io.hhplus.tdd.point.exception.NoPointHistoryException;
 import io.hhplus.tdd.point.exception.UserNotFoundException;
 import io.hhplus.tdd.point.repository.PointHistoryRepository;

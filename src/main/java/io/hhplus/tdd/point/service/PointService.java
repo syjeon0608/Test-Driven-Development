@@ -1,8 +1,8 @@
 package io.hhplus.tdd.point.service;
 
 
-import io.hhplus.tdd.point.PointHistory;
-import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.entity.PointHistory;
+import io.hhplus.tdd.point.entity.UserPoint;
 
 import java.util.List;
 

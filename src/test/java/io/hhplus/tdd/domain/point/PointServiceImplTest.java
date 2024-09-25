@@ -1,8 +1,9 @@
 package io.hhplus.tdd.domain.point;
 
-import io.hhplus.tdd.database.PointHistoryTable;
-import io.hhplus.tdd.database.UserPointTable;
-import io.hhplus.tdd.point.*;
+import io.hhplus.tdd.point.entity.PointHistory;
+import io.hhplus.tdd.point.entity.PointValidator;
+import io.hhplus.tdd.point.entity.TransactionType;
+import io.hhplus.tdd.point.entity.UserPoint;
 import io.hhplus.tdd.point.exception.NoPointHistoryException;
 import io.hhplus.tdd.point.exception.UserNotFoundException;
 import io.hhplus.tdd.point.repository.PointHistoryRepository;
@@ -83,7 +84,7 @@ class PointServiceImplTest {
     @DisplayName("포인트 내역이 내림차순으로 정렬되어야 한다")
     public void shouldReturnPointHistoryInDescendingOrder() {
         List<PointHistory> historyList = List.of(
-                new PointHistory(1L, 1L,1000L,TransactionType.CHARGE, currentTimeMillis()),
+                new PointHistory(1L, 1L,1000L, TransactionType.CHARGE, currentTimeMillis()),
                 new PointHistory(2L, 1L,500L, TransactionType.USE, currentTimeMillis() - 1000)
         );
 

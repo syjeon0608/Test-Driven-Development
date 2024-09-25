@@ -1,7 +1,7 @@
 package io.hhplus.tdd.domain.point;
 
 import io.hhplus.tdd.point.exception.InvalidChargeAmountException;
-import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.entity.UserPoint;
 import io.hhplus.tdd.point.exception.InvalidUseAmountException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

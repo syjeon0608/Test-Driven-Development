@@ -1,6 +1,6 @@
 package io.hhplus.tdd.domain.point;
 
-import io.hhplus.tdd.point.PointValidator;
+import io.hhplus.tdd.point.entity.PointValidator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
