@@ -1,22 +1,27 @@
-package io.hhplus.tdd.point;
+package io.hhplus.tdd.point.service.impl;
 
+import io.hhplus.tdd.point.PointHistory;
+import io.hhplus.tdd.point.PointValidator;
+import io.hhplus.tdd.point.TransactionType;
+import io.hhplus.tdd.point.UserPoint;
 import io.hhplus.tdd.point.exception.NoPointHistoryException;
 import io.hhplus.tdd.point.exception.UserNotFoundException;
 import io.hhplus.tdd.point.repository.PointHistoryRepository;
 import io.hhplus.tdd.point.repository.UserPointRepository;
+import io.hhplus.tdd.point.service.PointService;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
 
 @Service
-public class PointService {
+public class PointServiceImpl implements PointService {
 
     private final UserPointRepository userPointRepository;
     private final PointHistoryRepository pointHistoryRepository;
     private final PointValidator pointValidator;
 
-    public PointService(UserPointRepository userPointRepository, PointHistoryRepository pointHistoryRepository, PointValidator pointValidator) {
+    public PointServiceImpl(UserPointRepository userPointRepository, PointHistoryRepository pointHistoryRepository, PointValidator pointValidator) {
         this.userPointRepository = userPointRepository;
         this.pointHistoryRepository = pointHistoryRepository;
         this.pointValidator = pointValidator;
@@ -24,7 +29,7 @@ public class PointService {
 
 
     // 등록/미등록 유저 판별 메서드
-    public UserPoint getUserPointOrThrow(Long userId) {
+    private UserPoint getUserPointOrThrow(Long userId) {
         return userPointRepository.selectById(userId)
                 .orElseThrow(() -> UserNotFoundException.notFoundUser(userId));
     }
