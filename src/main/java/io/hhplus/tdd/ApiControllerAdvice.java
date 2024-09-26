@@ -21,13 +21,8 @@ class ApiControllerAdvice extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(InvalidAmountException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidChargeAmountException(InvalidAmountException e) {
-        return ResponseEntity.status(404).body(new ErrorResponse("400", e.getMessage()));
-    }
-
-    @ExceptionHandler(InvalidAmountException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidUseAmountException(InvalidAmountException e) {
-        return ResponseEntity.status(404).body(new ErrorResponse("400", e.getMessage()));
+    public ResponseEntity<ErrorResponse> handleInvalidAmountException(InvalidAmountException e) {
+        return ResponseEntity.status(400).body(new ErrorResponse("400", e.getMessage()));
     }
 
     @ExceptionHandler(NoPointHistoryException.class)
