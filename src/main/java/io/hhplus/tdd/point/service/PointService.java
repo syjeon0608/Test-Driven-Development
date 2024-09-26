@@ -12,6 +12,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 public class PointService {
@@ -20,6 +24,8 @@ public class PointService {
     private final PointHistoryRepository pointHistoryRepository;
     private final PointValidator pointValidator;
 
+    private final ConcurrentHashMap<Long, Lock> userLocks = new ConcurrentHashMap<>();
+
     public PointService(UserPointRepository userPointRepository, PointHistoryRepository pointHistoryRepository, PointValidator pointValidator) {
         this.userPointRepository = userPointRepository;
         this.pointHistoryRepository = pointHistoryRepository;
@@ -27,37 +33,48 @@ public class PointService {
     }
 
 
-    // 등록/미등록 유저 판별 메서드
-    private UserPoint getUserPointOrThrow(Long userId) {
-        return userPointRepository.selectById(userId)
-                .orElseThrow(() -> UserNotFoundException.notFoundUser(userId));
+    //같은 유저에 대해서만 동시성 제어
+    private Lock getUserLock(Long userId) {
+        return userLocks.computeIfAbsent(userId, id -> new ReentrantLock());
     }
 
-    // 포인트 기록 저장 로직 통합 메서드
-    private void savePointHistory(Long userId, Long amount, TransactionType type) {
-        pointHistoryRepository.insert(userId, amount, type, System.currentTimeMillis());
+    public CompletableFuture<UserPoint> chargePoints(Long userId, Long amount) {
+        return CompletableFuture.supplyAsync(() -> {
+            Lock lock = getUserLock(userId);
+            lock.lock();
+            try {
+                pointValidator.validateCharge(userId, amount);
+                UserPoint userPoint = getUserPointOrThrow(userId);
+
+                UserPoint updatedUserPoint = userPoint.charge(amount);
+                userPointRepository.insertOrUpdate(userId, updatedUserPoint.point());
+                savePointHistory(userId, amount, TransactionType.CHARGE);
+
+                return updatedUserPoint;
+            } finally {
+                lock.unlock();
+            }
+        });
     }
-    
-    public UserPoint chargePoints(Long userId, Long amount) {
-        pointValidator.validateCharge(userId, amount);
-        UserPoint userPoint = getUserPointOrThrow(userId);
 
-        UserPoint updatedUserPoint = userPoint.charge(amount);
-        userPointRepository.insertOrUpdate(userId, updatedUserPoint.point());
-        savePointHistory(userId, amount, TransactionType.CHARGE);
+    public CompletableFuture<UserPoint> usePoints(Long userId, Long amount) {
+        return CompletableFuture.supplyAsync(() -> {
+            Lock lock = getUserLock(userId);
+            lock.lock();
+            try {
+                pointValidator.validateUse(userId, amount);
+                UserPoint userPoint = getUserPointOrThrow(userId);
 
-        return updatedUserPoint;
-    }
+                UserPoint updatedUserPoint = userPoint.use(amount);
+                userPointRepository.insertOrUpdate(userId, updatedUserPoint.point());
 
-    public UserPoint usePoints(Long userId, Long amount) {
-        pointValidator.validateUse(userId, amount);
-        UserPoint userPoint = getUserPointOrThrow(userId);
+                savePointHistory(userId, -amount, TransactionType.USE);
 
-        UserPoint updatedUserPoint = userPoint.use(amount);
-        userPointRepository.insertOrUpdate(userId, updatedUserPoint.point());
-        savePointHistory(userId, -amount, TransactionType.USE);
-
-        return updatedUserPoint;
+                return updatedUserPoint;
+            } finally {
+                lock.unlock();
+            }
+        });
     }
 
     public UserPoint getUserPoints(Long userId) {
@@ -78,6 +95,18 @@ public class PointService {
         return historyList.stream()
                 .sorted(Comparator.comparingLong(PointHistory::updateMillis).reversed())
                 .toList();
+    }
+
+
+    // 등록/미등록 유저 판별 메서드
+    private UserPoint getUserPointOrThrow(Long userId) {
+        return userPointRepository.selectById(userId)
+                .orElseThrow(() -> UserNotFoundException.notFoundUser(userId));
+    }
+
+    // 포인트 기록 저장 로직 통합 메서드
+    private void savePointHistory(Long userId, Long amount, TransactionType type) {
+        pointHistoryRepository.insert(userId, amount, type, System.currentTimeMillis());
     }
 
 }
