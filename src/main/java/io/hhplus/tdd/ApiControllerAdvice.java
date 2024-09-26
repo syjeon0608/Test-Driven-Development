@@ -1,7 +1,6 @@
 package io.hhplus.tdd;
 
-import io.hhplus.tdd.point.exception.InvalidChargeAmountException;
-import io.hhplus.tdd.point.exception.InvalidUseAmountException;
+import io.hhplus.tdd.point.exception.InvalidAmountException;
 import io.hhplus.tdd.point.exception.NoPointHistoryException;
 import io.hhplus.tdd.point.exception.UserNotFoundException;
 import org.springframework.http.ResponseEntity;
@@ -21,14 +20,9 @@ class ApiControllerAdvice extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(404).body(new ErrorResponse("404", e.getMessage()));
     }
 
-    @ExceptionHandler(InvalidChargeAmountException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidChargeAmountException(InvalidChargeAmountException e) {
-        return ResponseEntity.status(404).body(new ErrorResponse("400", e.getMessage()));
-    }
-
-    @ExceptionHandler(InvalidUseAmountException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidUseAmountException(InvalidUseAmountException e) {
-        return ResponseEntity.status(404).body(new ErrorResponse("400", e.getMessage()));
+    @ExceptionHandler(InvalidAmountException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidAmountException(InvalidAmountException e) {
+        return ResponseEntity.status(400).body(new ErrorResponse("400", e.getMessage()));
     }
 
     @ExceptionHandler(NoPointHistoryException.class)

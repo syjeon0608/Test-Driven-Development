@@ -8,7 +8,7 @@ import io.hhplus.tdd.point.exception.NoPointHistoryException;
 import io.hhplus.tdd.point.exception.UserNotFoundException;
 import io.hhplus.tdd.point.repository.PointHistoryRepository;
 import io.hhplus.tdd.point.repository.UserPointRepository;
-import io.hhplus.tdd.point.service.impl.PointServiceImpl;
+import io.hhplus.tdd.point.service.PointService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static java.lang.System.currentTimeMillis;
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,7 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class PointServiceImplTest {
+class PointServiceTest {
 
     @Mock
     private UserPointRepository userPointRepository;
@@ -41,7 +42,7 @@ class PointServiceImplTest {
     private PointValidator pointValidator;
 
     @InjectMocks
-    private PointServiceImpl pointService;
+    private PointService pointService;
 
     @BeforeEach
     public void setup() {
@@ -53,9 +54,11 @@ class PointServiceImplTest {
         UserPoint userPoint = new UserPoint(1L, 100L, currentTimeMillis());
         when(userPointRepository.selectById(1L)).thenReturn(Optional.of(userPoint));
 
-        UserPoint updatedUserPoint = pointService.chargePoints(userPoint.id(),50L);
+        CompletableFuture<UserPoint> future = pointService.chargePoints(userPoint.id(), 50L);
 
+        UserPoint updatedUserPoint = future.join();
         assertEquals(150L, updatedUserPoint.point());
+
     }
 
     @Test
@@ -64,10 +67,12 @@ class PointServiceImplTest {
         UserPoint userPoint = new UserPoint(1L, 100L, currentTimeMillis());
         when(userPointRepository.selectById(1L)).thenReturn(Optional.of(userPoint));
 
-        UserPoint updatedUserPoint = pointService.usePoints(1L,30L);
+        CompletableFuture<UserPoint> future = pointService.usePoints(userPoint.id(), 30L);
+        UserPoint updatedUserPoint = future.join();
 
         assertEquals(70L, updatedUserPoint.point());
     }
+
 
     @Test
     @DisplayName("포인트 조회가 성공적으로 이루어져야 한다")
@@ -116,7 +121,7 @@ class PointServiceImplTest {
         when(userPointRepository.selectById(1L)).thenReturn(Optional.of(userPoint));
 
         // private savePointHistory()를 직접 호출하는 대신, 이 메서드를 호출하는 메서드로 테스트 하였습니다.
-        UserPoint updatedUserPoint = pointService.chargePoints(userId, amount);
+        CompletableFuture<UserPoint> updatedUserPoint = pointService.chargePoints(userId, amount);
 
         ArgumentCaptor<Long> updateMillisCaptor = ArgumentCaptor.forClass(Long.class);
 
