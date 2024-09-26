@@ -8,7 +8,7 @@ import io.hhplus.tdd.point.exception.NoPointHistoryException;
 import io.hhplus.tdd.point.exception.UserNotFoundException;
 import io.hhplus.tdd.point.repository.PointHistoryRepository;
 import io.hhplus.tdd.point.repository.UserPointRepository;
-import io.hhplus.tdd.point.service.impl.PointServiceImpl;
+import io.hhplus.tdd.point.service.PointService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class PointServiceImplTest {
+class PointServiceTest {
 
     @Mock
     private UserPointRepository userPointRepository;
@@ -41,7 +41,7 @@ class PointServiceImplTest {
     private PointValidator pointValidator;
 
     @InjectMocks
-    private PointServiceImpl pointService;
+    private PointService pointService;
 
     @BeforeEach
     public void setup() {
